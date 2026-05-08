@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const indexRouter = require("./routes/indexRouter");
+const authRouter = require("./routes/authRouter");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -13,6 +14,7 @@ app.use(
 );
 
 app.use("/", indexRouter);
+app.use("/api/auth", authRouter);
 
 const PORT = 3000;
 
