@@ -1,8 +1,8 @@
 const { Router } = require("express");
-const { servePage } = require("../controllers/indexController");
+const { healthCheck } = require("../controllers/indexController");
 
 const indexRouter = Router();
 
-indexRouter.get("/", servePage);
+indexRouter.get("/api/health", healthCheck);
 
 module.exports = indexRouter;

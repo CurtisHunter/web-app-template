@@ -1,6 +1,6 @@
-const db = require("../db/queries");
-const { body, validationResult, matchedData } = require("express-validator");
+//const db = require("../db/queries");
+//const { body, validationResult, matchedData } = require("express-validator");
 
-exports.servePage = async (req, res) => {
-  res.render("index");
+exports.healthCheck = async (req, res) => {
+  res.json({ status: "ok" });
 };
