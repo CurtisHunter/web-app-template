@@ -1,5 +1,5 @@
 const { Router } = require("express");
-const { healthCheck } = require("../controllers/indexController");
+
 const {
   signIn,
   signUp,

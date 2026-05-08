@@ -10,12 +10,12 @@ const routes = [
     errorElement: <ErrorPage />,
   },
   {
-    path: "/users/sign_up",
+    path: "/users/sign-up",
     element: <SignUpPage />,
     errorElement: <ErrorPage />,
   },
   {
-    path: "/users/sign_in",
+    path: "/users/sign-in",
     element: <SignInPage />,
     errorElement: <ErrorPage />,
   },
