@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router";
 
 function SignInPage() {
   const [email, setEmail] = useState("");
@@ -39,6 +40,11 @@ function SignInPage() {
         </div>
         <button type="submit">Log In</button>
       </form>
+      <div>
+        <p>
+          Need an Account? <Link to="/users/sign_up">Sign up</Link>
+        </p>
+      </div>
     </main>
   );
 }
