@@ -1,7 +1,18 @@
 function SignInPage() {
   return (
     <main>
-      <h1>This is the main sign in page</h1>
+      <h1>Sign in</h1>
+      <form>
+        <div>
+          <label htmlFor="email">Email</label>
+          <input id="email" name="email" type="email" />
+        </div>
+        <div>
+          <label htmlFor="password">Password</label>
+          <input id="password" name="password" type="password" />
+        </div>
+        <button type="submit">Log In</button>
+      </form>
     </main>
   );
 }

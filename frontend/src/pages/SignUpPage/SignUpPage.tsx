@@ -4,8 +4,8 @@ function SignUpPage() {
       <h1>Sign up</h1>
       <form>
         <div>
-          <label htmlFor="name">Username</label>
-          <input id="username" name="username" type="text"></input>
+          <label htmlFor="name">Name</label>
+          <input id="name" name="name" type="text" />
         </div>
         <div>
           <label htmlFor="email">Email</label>
