@@ -1,9 +1,9 @@
 exports.signUp = async (req, res) => {
-  res.json({ message: "sign up route" });
+  res.json({ message: "sign up route", recieved: req.body });
 };
 
 exports.signIn = async (req, res) => {
-  res.json({ message: "sign in route" });
+  res.json({ message: "sign in route", recieved: req.body });
 };
 
 exports.signOut = async (req, res) => {
