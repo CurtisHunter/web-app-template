@@ -34,9 +34,28 @@ exports.signUp = [
   },
 ];
 
-exports.signIn = async (req, res) => {
-  res.json({ message: "sign in route", received: req.body });
-};
+const validateSignIn = [
+  body("email")
+    .trim()
+    .isEmail()
+    .withMessage(`email ${emailErr}`)
+    .normalizeEmail(),
+  body("password").isLength({ min: 8 }).withMessage(`Password ${passwordErr}`),
+];
+
+exports.signIn = [
+  validateSignIn,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        errors: errors.array(),
+      });
+    }
+    const { email, password } = matchedData(req);
+    res.json({ message: "sign in route", received: { email, password } });
+  },
+];
 
 exports.signOut = async (req, res) => {
   res.json({ message: "sign out route" });
