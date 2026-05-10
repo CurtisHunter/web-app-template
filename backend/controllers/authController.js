@@ -1,4 +1,5 @@
 const { body, validationResult, matchedData } = require("express-validator");
+const bcrypt = require("bcryptjs");
 
 const alphaErr = "must only contain letters.";
 const lengthErr = "Must be between 1 and 30 characters";
@@ -30,7 +31,9 @@ exports.signUp = [
       });
     }
     const { name, email, password } = matchedData(req);
-    res.json({ message: "sign up route", received: { name, email, password } });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await db.createUser(name, email, passwordHash);
+    res.status(201).json({ user });
   },
 ];
 
