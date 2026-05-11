@@ -57,7 +57,25 @@ exports.signIn = [
       });
     }
     const { email, password } = matchedData(req);
-    res.json({ message: "sign in route", received: { email, password } });
+    const user = await db.getUserByEmail(email);
+    if (!user) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    res.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        created_at: user.created_at,
+      },
+    });
   },
 ];
 
