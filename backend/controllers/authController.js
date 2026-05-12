@@ -1,6 +1,7 @@
 const { body, validationResult, matchedData } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const db = require("../db/queries");
+const passport = require("passport");
 
 const alphaErr = "must only contain letters.";
 const lengthErr = "Must be between 1 and 30 characters";
@@ -49,33 +50,37 @@ const validateSignIn = [
 
 exports.signIn = [
   validateSignIn,
-  async (req, res) => {
+  async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         errors: errors.array(),
       });
     }
-    const { email, password } = matchedData(req);
-    const user = await db.getUserByEmail(email);
-    if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
 
-    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    passport.authenticate("local", (err, user, info) => {
+      if (err) {
+        return next(err);
+      }
 
-    if (!passwordMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
+      if (!user) {
+        return res.status(401).json({ message: info.message });
+      }
 
-    res.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        created_at: user.created_at,
-      },
-    });
+      req.login(user, (err) => {
+        if (err) {
+          return next(err);
+        }
+        return res.json({
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            created_at: user.created_at,
+          },
+        });
+      });
+    })(req, res, next);
   },
 ];
 
