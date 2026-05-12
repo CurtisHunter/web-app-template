@@ -1,22 +1,33 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 
 function MainPage() {
-  const [apiStatus, setApiStatus] = useState("checking");
+  const [userName, setUserName] = useState("");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-    async function checkApi() {
-      const response = await fetch("http://localhost:3000/api/health");
+    async function checkAuth() {
+      const response = await fetch("http://localhost:3000/api/auth/me", {
+        credentials: "include",
+      });
+
       const data = await response.json();
 
-      setApiStatus(data.status);
+      if (!response.ok) {
+        navigate("/users/sign-in");
+        return;
+      }
+
+      setUserName(data.user.name);
     }
 
-    checkApi();
-  }, []);
+    checkAuth();
+  }, [navigate]);
   return (
     <main>
       <h1>This is the main page</h1>
-      <p>API status: {apiStatus}</p>
+      <p>Signed in as: {userName}</p>
     </main>
   );
 }
