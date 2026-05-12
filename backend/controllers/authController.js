@@ -84,8 +84,21 @@ exports.signIn = [
   },
 ];
 
-exports.signOut = async (req, res) => {
-  res.json({ message: "sign out route" });
+exports.signOut = async (req, res, next) => {
+  req.logout((err) => {
+    if (err) {
+      return next(err);
+    }
+
+    req.session.destroy((err) => {
+      if (err) {
+        return next(err);
+      }
+
+      res.clearCookie("connect.sid");
+      return res.json({ message: "Signed out" });
+    });
+  });
 };
 
 exports.getCurrentUser = async (req, res) => {
