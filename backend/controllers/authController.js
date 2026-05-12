@@ -89,5 +89,16 @@ exports.signOut = async (req, res) => {
 };
 
 exports.getCurrentUser = async (req, res) => {
-  res.json({ user: null });
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ user: null });
+  }
+
+  res.json({
+    user: {
+      id: req.user.id,
+      name: req.user.name,
+      email: req.user.email,
+      created_at: req.user.created_at,
+    },
+  });
 };
