@@ -53,7 +53,7 @@ function SignInPage() {
       </form>
       <div>
         <p>
-          Need an Account? <Link to="/users/sign_up">Sign up</Link>
+          Need an Account? <Link to="/users/sign-up">Sign up</Link>
         </p>
       </div>
     </main>
