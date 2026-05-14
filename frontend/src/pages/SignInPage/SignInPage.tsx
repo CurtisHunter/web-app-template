@@ -4,11 +4,13 @@ import { Link, useNavigate } from "react-router";
 function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const navigate = useNavigate();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setErrorMessage("");
 
     const response = await fetch("http://localhost:3000/api/auth/sign-in", {
       method: "POST",
@@ -24,17 +26,18 @@ function SignInPage() {
 
     const data = await response.json();
 
-    if (response.ok) {
-      navigate("/");
+    if (!response.ok) {
+      setErrorMessage(data.message || "Something went wrong");
       return;
     }
 
-    console.log(data);
+    navigate("/");
   }
 
   return (
     <main>
       <h1>Sign in</h1>
+      {errorMessage && <p>{errorMessage}</p>}
       <form onSubmit={(e) => handleSubmit(e)}>
         <div>
           <label htmlFor="email">Email</label>
