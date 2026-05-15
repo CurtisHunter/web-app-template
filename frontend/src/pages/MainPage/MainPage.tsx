@@ -4,6 +4,7 @@ import { apiFetch } from "../../api/client";
 
 function MainPage() {
   const [userName, setUserName] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
 
@@ -26,29 +27,41 @@ function MainPage() {
 
   useEffect(() => {
     async function checkAuth() {
-      const response = await apiFetch("/api/auth/me", {
-        method: "GET",
-      });
+      try {
+        const response = await apiFetch("/api/auth/me");
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (!response.ok) {
+        if (!response.ok) {
+          navigate("/users/sign-in");
+          return;
+        }
+
+        setUserName(data.user.name);
+      } catch (error) {
+        console.error("Error checking auth:", error);
         navigate("/users/sign-in");
-        return;
+      } finally {
+        setIsLoading(false);
       }
-
-      setUserName(data.user.name);
     }
 
     checkAuth();
   }, [navigate]);
+  if (isLoading) {
+    return (
+      <main>
+        <p>Loading...</p>
+      </main>
+    );
+  }
   return (
     <main>
       <button type="button" onClick={handleSignOut}>
         Sign out
       </button>
       <h1>This is the main page</h1>
-      <p>Signed in as: {userName}</p>
+      <p>Signed in as {userName}</p>
     </main>
   );
 }
