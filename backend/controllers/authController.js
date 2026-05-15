@@ -33,6 +33,13 @@ exports.signUp = [
       });
     }
     const { name, email, password } = matchedData(req);
+    const existingUser = await db.getUserByEmail(email);
+    if (existingUser) {
+      return res.status(409).json({
+        message: "Email is already in use",
+      });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await db.createUser(name, email, hashedPassword);
     res.status(201).json({ user });
