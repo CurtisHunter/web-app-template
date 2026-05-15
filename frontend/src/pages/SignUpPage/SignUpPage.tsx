@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { apiFetch } from "../../api/client";
 
 function SignUpPage() {
   const [name, setName] = useState("");
@@ -13,12 +14,8 @@ function SignUpPage() {
     event.preventDefault();
     setErrorMessage("");
 
-    const response = await fetch("http://localhost:3000/api/auth/sign-up", {
+    const response = await apiFetch("/api/auth/sign-up", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
       body: JSON.stringify({
         name,
         email,

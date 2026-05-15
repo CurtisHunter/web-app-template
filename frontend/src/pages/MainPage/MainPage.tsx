@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { apiFetch } from "../../api/client";
 
 function MainPage() {
   const [userName, setUserName] = useState("");
@@ -8,9 +9,8 @@ function MainPage() {
 
   async function handleSignOut() {
     try {
-      const response = await fetch("http://localhost:3000/api/auth/sign-out", {
+      const response = await apiFetch("/api/auth/sign-out", {
         method: "POST",
-        credentials: "include",
       });
 
       // Check if the request was successful
@@ -26,8 +26,8 @@ function MainPage() {
 
   useEffect(() => {
     async function checkAuth() {
-      const response = await fetch("http://localhost:3000/api/auth/me", {
-        credentials: "include",
+      const response = await apiFetch("/api/auth/me", {
+        method: "GET",
       });
 
       const data = await response.json();
