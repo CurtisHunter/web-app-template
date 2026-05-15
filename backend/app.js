@@ -11,7 +11,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_ORIGIN,
     credentials: true,
   }),
 );
@@ -33,7 +33,7 @@ app.use(passport.session());
 app.use("/", indexRouter);
 app.use("/api/auth", authRouter);
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 async function startServer() {
   app.listen(PORT, (error) => {
