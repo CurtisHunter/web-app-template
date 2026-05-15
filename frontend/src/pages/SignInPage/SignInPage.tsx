@@ -27,6 +27,11 @@ function SignInPage() {
     const data = await response.json();
 
     if (!response.ok) {
+      if (data.errors) {
+        setErrorMessage(data.errors[0].msg);
+        return;
+      }
+
       setErrorMessage(data.message || "Something went wrong");
       return;
     }

@@ -5,11 +5,13 @@ function SignUpPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const navigate = useNavigate();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setErrorMessage("");
 
     const response = await fetch("http://localhost:3000/api/auth/sign-up", {
       method: "POST",
@@ -26,17 +28,23 @@ function SignUpPage() {
 
     const data = await response.json();
 
-    if (response.ok) {
-      navigate("/users/sign-in");
+    if (!response.ok) {
+      if (data.errors) {
+        setErrorMessage(data.errors[0].msg);
+        return;
+      }
+
+      setErrorMessage(data.message || "Something went wrong");
       return;
     }
 
-    console.log(data);
+    navigate("/users/sign-in");
   }
 
   return (
     <main>
       <h1>Sign up</h1>
+      {errorMessage && <p>{errorMessage}</p>}
       <form onSubmit={(e) => handleSubmit(e)}>
         <div>
           <label htmlFor="name">Name</label>
