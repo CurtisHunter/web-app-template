@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { apiFetch } from "../../api/client";
+import { supabase } from "../../lib/supabase";
 
 function SignInPage() {
   const [email, setEmail] = useState("");
@@ -13,20 +13,13 @@ function SignInPage() {
     event.preventDefault();
     setErrorMessage("");
 
-    const response = await apiFetch("/api/auth/sign-in", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      if (data.errors) {
-        setErrorMessage(data.errors[0].msg);
-        return;
-      }
-
-      setErrorMessage(data.message || "Something went wrong");
+    if (error) {
+      setErrorMessage(error.message);
       return;
     }
 
