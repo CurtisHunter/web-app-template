@@ -30,11 +30,17 @@ function MainPage() {
           return;
         }
 
-        const userMetadata = claims.user_metadata as
-          | { name?: string }
-          | undefined;
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("name")
+          .eq("id", claims.sub)
+          .single();
 
-        setUserName(userMetadata?.name || claims.email || "");
+        if (profileError) {
+          console.error("Error loading profile:", profileError);
+          setUserName(claims.email || "");
+          return;
+        }
       } catch (error) {
         console.error("Error checking auth:", error);
         navigate("/users/sign-in");
