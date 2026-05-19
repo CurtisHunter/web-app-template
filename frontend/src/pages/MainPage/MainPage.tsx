@@ -22,10 +22,8 @@ function MainPage() {
   useEffect(() => {
     async function checkAuth() {
       try {
-        const {
-          data: { claims },
-          error,
-        } = await supabase.auth.getClaims();
+        const { data, error } = await supabase.auth.getClaims();
+        const claims = data?.claims;
 
         if (error || !claims) {
           navigate("/users/sign-in");
