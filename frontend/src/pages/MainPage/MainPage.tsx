@@ -41,6 +41,7 @@ function MainPage() {
           setUserName(claims.email || "");
           return;
         }
+        setUserName(profile?.name || claims.email || "");
       } catch (error) {
         console.error("Error checking auth:", error);
         navigate("/users/sign-in");
