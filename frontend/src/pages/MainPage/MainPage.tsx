@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { apiFetch } from "../../api/client";
+import { supabase } from "../../lib/supabase";
 
 function MainPage() {
   const [userName, setUserName] = useState("");
@@ -9,35 +9,34 @@ function MainPage() {
   const navigate = useNavigate();
 
   async function handleSignOut() {
-    try {
-      const response = await apiFetch("/api/auth/sign-out", {
-        method: "POST",
-      });
+    const { error } = await supabase.auth.signOut();
 
-      // Check if the request was successful
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      navigate("/users/sign-in");
-    } catch (error) {
-      console.error("Error posting data (sign out):", error);
+    if (error) {
+      console.error("Error signing out:", error);
+      return;
     }
+
+    navigate("/users/sign-in");
   }
 
   useEffect(() => {
     async function checkAuth() {
       try {
-        const response = await apiFetch("/api/auth/me");
+        const {
+          data: { claims },
+          error,
+        } = await supabase.auth.getClaims();
 
-        const data = await response.json();
-
-        if (!response.ok) {
+        if (error || !claims) {
           navigate("/users/sign-in");
           return;
         }
 
-        setUserName(data.user.name);
+        const userMetadata = claims.user_metadata as
+          | { name?: string }
+          | undefined;
+
+        setUserName(userMetadata?.name || claims.email || "");
       } catch (error) {
         console.error("Error checking auth:", error);
         navigate("/users/sign-in");
@@ -48,6 +47,7 @@ function MainPage() {
 
     checkAuth();
   }, [navigate]);
+
   if (isLoading) {
     return (
       <main>
@@ -55,6 +55,7 @@ function MainPage() {
       </main>
     );
   }
+
   return (
     <main>
       <button type="button" onClick={handleSignOut}>
