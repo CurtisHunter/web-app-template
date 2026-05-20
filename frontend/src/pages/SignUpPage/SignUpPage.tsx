@@ -14,7 +14,7 @@ function SignUpPage() {
     event.preventDefault();
     setErrorMessage("");
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -29,16 +29,6 @@ function SignUpPage() {
       return;
     }
 
-    if (data.user) {
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({ id: data.user.id, name });
-
-      if (profileError) {
-        setErrorMessage(profileError.message);
-        return;
-      }
-    }
     navigate("/users/sign-in");
   }
 
