@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { supabase } from "../../lib/supabase";
+import { trackEvent } from "../../lib/analytics";
 
 function SignInPage() {
   const [email, setEmail] = useState("");
@@ -13,6 +14,8 @@ function SignInPage() {
     event.preventDefault();
     setErrorMessage("");
 
+    trackEvent("auth_sign_in_submitted", { method: "email" });
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -20,13 +23,22 @@ function SignInPage() {
 
     if (error) {
       setErrorMessage(error.message);
+      trackEvent("auth_sign_in_failed", {
+        method: "email",
+        reason: error.message,
+      });
       return;
     }
+
+    trackEvent("auth_sign_in_succeeded", { method: "email" });
 
     navigate("/");
   }
 
   async function handleGoogleSignIn() {
+    trackEvent("auth_google_sign_in_started", {
+      method: "google",
+    });
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -35,6 +47,10 @@ function SignInPage() {
     });
 
     if (error) {
+      trackEvent("auth_google_sign_in_failed", {
+        method: "google",
+        reason: error.message,
+      });
       setErrorMessage(error.message);
     }
   }
