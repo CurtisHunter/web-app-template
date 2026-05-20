@@ -26,6 +26,19 @@ function SignInPage() {
     navigate("/");
   }
 
+  async function handleGoogleSignIn() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      setErrorMessage(error.message);
+    }
+  }
+
   return (
     <main>
       <h1>Sign in</h1>
@@ -53,6 +66,9 @@ function SignInPage() {
         </div>
         <button type="submit">Log In</button>
       </form>
+      <button type="button" onClick={handleGoogleSignIn}>
+        Sign in with Google
+      </button>
       <div>
         <p>
           Need an Account? <Link to="/users/sign-up">Sign up</Link>
