@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { supabase } from "../../lib/supabase";
+import { trackEvent } from "../../lib/analytics";
 
 function SignUpPage() {
   const [name, setName] = useState("");
@@ -14,6 +15,10 @@ function SignUpPage() {
     event.preventDefault();
     setErrorMessage("");
 
+    trackEvent("auth_sign_up_submitted", {
+      method: "email",
+    });
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -26,9 +31,15 @@ function SignUpPage() {
 
     if (error) {
       setErrorMessage(error.message);
+      trackEvent("auth_sign_up_failed", {
+        method: "email",
+        reason: error.message,
+      });
       return;
     }
-
+    trackEvent("auth_sign_up_succeeded", {
+      method: "email",
+    });
     navigate("/users/sign-in");
   }
 
