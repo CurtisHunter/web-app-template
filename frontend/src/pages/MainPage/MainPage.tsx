@@ -5,6 +5,7 @@ import { identifyUser, resetAnalytics, trackEvent } from "../../lib/analytics";
 import {
   configureRevenueCat,
   userHasProEntitlement,
+  presentProPaywall,
 } from "../../lib/revenuecat";
 
 function MainPage() {
@@ -26,6 +27,22 @@ function MainPage() {
     resetAnalytics();
 
     navigate("/users/sign-in");
+  }
+
+  async function handleUpgrade() {
+    try {
+      const purchaseResult = await presentProPaywall();
+
+      if (!purchaseResult) {
+        console.error("No RevenueCat offering available");
+        return;
+      }
+
+      const isProUser = await userHasProEntitlement();
+      setHasPro(isProUser);
+    } catch (error) {
+      console.error("Error presenting RevenueCat paywall", error);
+    }
   }
 
   useEffect(() => {
@@ -89,6 +106,11 @@ function MainPage() {
       <h1>This is the main page</h1>
       <p>Signed in as {userName}</p>
       <p>Plan: {hasPro ? "Pro" : "Free"}</p>
+      {!hasPro && (
+        <button type="button" onClick={handleUpgrade}>
+          Upgrade
+        </button>
+      )}
     </main>
   );
 }
