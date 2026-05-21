@@ -2,10 +2,15 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { supabase } from "../../lib/supabase";
 import { identifyUser, resetAnalytics, trackEvent } from "../../lib/analytics";
+import {
+  configureRevenueCat,
+  userHasProEntitlement,
+} from "../../lib/revenuecat";
 
 function MainPage() {
   const [userName, setUserName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [hasPro, setHasPro] = useState(false);
 
   const navigate = useNavigate();
 
@@ -35,6 +40,15 @@ function MainPage() {
         }
 
         identifyUser(claims.sub);
+        configureRevenueCat(claims.sub);
+
+        try {
+          const isProUser = await userHasProEntitlement();
+          setHasPro(isProUser);
+        } catch (error) {
+          console.error("Error checking RevenueCat entitlement:", error);
+          setHasPro(false);
+        }
 
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
@@ -74,6 +88,7 @@ function MainPage() {
       </button>
       <h1>This is the main page</h1>
       <p>Signed in as {userName}</p>
+      <p>Plan: {hasPro ? "Pro" : "Free"}</p>
     </main>
   );
 }
