@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { supabase } from "../../lib/supabase";
+import { identifyUser, resetAnalytics, trackEvent } from "../../lib/analytics";
 
 function MainPage() {
   const [userName, setUserName] = useState("");
@@ -16,6 +17,9 @@ function MainPage() {
       return;
     }
 
+    trackEvent("auth_sign_out_succeeded");
+    resetAnalytics();
+
     navigate("/users/sign-in");
   }
 
@@ -29,6 +33,8 @@ function MainPage() {
           navigate("/users/sign-in");
           return;
         }
+
+        identifyUser(claims.sub);
 
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
