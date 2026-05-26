@@ -61,7 +61,43 @@ exports.handleStripeWebhook = async (req, res) => {
     return res.status(400).send(`Webhook Error ${error.message}`);
   }
 
-  console.log("Received Stripe webhook:", event.type);
+  switch (event.type) {
+    case "checkout.session.completed": {
+      const session = event.data.object;
+
+      console.log("Checkout completed for user:", session.client_reference_id);
+      console.log("Stripe customer:", session.customer);
+      console.log("Stripe subscription:", session.subscription);
+      break;
+    }
+
+    case "customer.subscription.created":
+    case "customer.subscription.updated":
+    case "customer.subscription.deleted": {
+      const subscription = event.data.object;
+
+      console.log(
+        "Subscription event for user:",
+        subscription.metadata?.userId,
+      );
+      console.log("Subscription status:", subscription.status);
+      console.log("Stripe subscription:", subscription.id);
+      break;
+    }
+
+    case "invoice.paid":
+    case "invoice.payment_failed": {
+      const invoice = event.data.object;
+
+      console.log("Invoice event:", event.type);
+      console.log("Stripe customer:", invoice.customer);
+      console.log("Stripe subscription:", invoice.subscription);
+      break;
+    }
+
+    default:
+      console.log("Unhandled Stripe webhook event:", event.type);
+  }
 
   res.json({ received: true });
 };
