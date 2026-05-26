@@ -31,9 +31,21 @@ function MainPage() {
 
   async function handleUpgrade() {
     try {
+      const { data: claimsData, error } = await supabase.auth.getClaims();
+      const claims = claimsData?.claims;
+
+      if (error || !claims) {
+        navigate("/users/sign-in");
+        return;
+      }
+
       const response = await fetch(
         "http://localhost:3000/api/create-checkout-session",
-        { method: "POST" },
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: claims.sub }),
+        },
       );
 
       const data = await response.json();
