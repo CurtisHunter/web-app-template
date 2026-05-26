@@ -15,8 +15,19 @@ exports.createCheckoutSession = async (req, res) => {
         .json({ error: "Stripe checkout is not configured" });
     }
 
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: "User id is required" });
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
+      client_reference_id: userId,
+      metadata: {
+        userId,
+      },
+      subscription_data: { metadata: { userId } },
       line_items: [
         {
           price: process.env.STRIPE_PRICE_ID,
