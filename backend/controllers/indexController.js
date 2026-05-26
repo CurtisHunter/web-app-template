@@ -33,3 +33,24 @@ exports.createCheckoutSession = async (req, res) => {
     res.status(500).json({ error: "Could not create checkout session" });
   }
 };
+
+exports.handleStripeWebhook = async (req, res) => {
+  const signature = req.headers["stripe-signature"];
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET,
+    );
+  } catch (error) {
+    console.error("Stripe webhook signature verification failed", error);
+    return res.status(400).send(`Webhook Error ${error.message}`);
+  }
+
+  console.log("Received Stripe webhook:", event.type);
+
+  res.json({ received: true });
+};

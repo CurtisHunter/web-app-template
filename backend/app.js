@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const indexRouter = require("./routes/indexRouter");
+const indexController = require("./controllers/indexController");
 
 const app = express();
 
@@ -13,6 +14,13 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: true }));
+
+// adding this route before .json in order to use express.raw
+app.post(
+  "/api/stripe/webhook",
+  express.raw({ type: "application/json" }),
+  indexController.handleStripeWebhook,
+);
 app.use(express.json());
 
 app.use("/", indexRouter);
