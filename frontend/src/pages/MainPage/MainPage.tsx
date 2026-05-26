@@ -5,7 +5,6 @@ import { identifyUser, resetAnalytics, trackEvent } from "../../lib/analytics";
 import {
   configureRevenueCat,
   userHasProEntitlement,
-  presentProPaywall,
 } from "../../lib/revenuecat";
 
 function MainPage() {
@@ -31,17 +30,21 @@ function MainPage() {
 
   async function handleUpgrade() {
     try {
-      const purchaseResult = await presentProPaywall();
+      const response = await fetch(
+        "http://localhost:3000/api/create-checkout-session",
+        { method: "POST" },
+      );
 
-      if (!purchaseResult) {
-        console.error("No RevenueCat offering available");
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Error creating Stripe checkout session");
         return;
       }
 
-      const isProUser = await userHasProEntitlement();
-      setHasPro(isProUser);
+      window.location.href = data.url;
     } catch (error) {
-      console.error("Error presenting RevenueCat paywall", error);
+      console.error("Error presenting Stripe checkout", error);
     }
   }
 
