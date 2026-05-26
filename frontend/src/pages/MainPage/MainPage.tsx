@@ -11,6 +11,7 @@ function MainPage() {
   const [userName, setUserName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [hasPro, setHasPro] = useState(false);
+  const [checkoutMessage, setCheckoutMessage] = useState("");
 
   const navigate = useNavigate();
 
@@ -90,6 +91,22 @@ function MainPage() {
       }
     }
 
+    function checkCheckoutStatus() {
+      const searchParams = new URLSearchParams(window.location.search);
+      const checkoutStatus = searchParams.get("checkout");
+
+      if (checkoutStatus === "success") {
+        setCheckoutMessage(
+          "Checkout completed. Your plan may take a moment to update.",
+        );
+      }
+
+      if (checkoutStatus === "cancelled") {
+        setCheckoutMessage("Checkout cancelled.");
+      }
+    }
+
+    checkCheckoutStatus();
     checkAuth();
   }, [navigate]);
 
@@ -107,6 +124,7 @@ function MainPage() {
         Sign out
       </button>
       <h1>This is the main page</h1>
+      {checkoutMessage && <p>{checkoutMessage}</p>}
       <p>Signed in as {userName}</p>
       <p>Plan: {hasPro ? "Pro" : "Free"}</p>
       {!hasPro && (
