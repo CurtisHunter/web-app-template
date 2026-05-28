@@ -16,11 +16,13 @@ exports.createCheckoutSession = async (req, res) => {
         .json({ error: "Stripe checkout is not configured" });
     }
 
-    const { userId } = req.body;
+    const { user, error: authError } = await getAuthenticatedUser(req);
 
-    if (!userId) {
-      return res.status(400).json({ error: "User id is required" });
+    if (authError || !user) {
+      return res.status(401).json({ error: authError });
     }
+
+    const userId = user.id;
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
