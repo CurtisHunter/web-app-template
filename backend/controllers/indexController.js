@@ -80,6 +80,28 @@ async function upsertSubscription(subscription) {
   }
 }
 
+async function getAuthenticatedUser(req) {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice("Bearer ".length)
+    : null;
+
+  if (!token) {
+    return { user: null, error: "Missing auth token" };
+  }
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(token);
+
+  if (error || !user) {
+    return { user: null, error: "Invalid auth token" };
+  }
+
+  return { user, error: null };
+}
+
 exports.handleStripeWebhook = async (req, res) => {
   const signature = req.headers["stripe-signature"];
 
