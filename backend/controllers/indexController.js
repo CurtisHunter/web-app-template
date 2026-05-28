@@ -2,6 +2,7 @@
 //const { body, validationResult, matchedData } = require("express-validator");
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const supabase = require("../lib/supabase");
 
 exports.healthCheck = async (req, res) => {
   res.json({ status: "ok" });
@@ -45,6 +46,40 @@ exports.createCheckoutSession = async (req, res) => {
   }
 };
 
+// update subscription if exists, insert if not. eg new subscription, new trialing, sub cancelled, paused status etc
+async function upsertSubscription(subscription) {
+  const userId = subscription.metadata?.userId;
+
+  if (!userId) {
+    console.error(
+      "Stripe subscription is missing userId metadata:",
+      subscription.id,
+    );
+    return;
+  }
+
+  const priceId = subscription.items?.data?.[0]?.price?.id || null;
+
+  const { error } = await supabase.from("subscriptions").upsert(
+    {
+      user_id: userId,
+      stripe_customer_id: subscription.customer,
+      stripe_subscription_id: subscription.id,
+      status: subscription.status,
+      price_id: priceId,
+      current_period_end: subscription.current_period_end
+        ? new Date(subscription.current_period_end * 1000).toISOString()
+        : null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "stripe_subscription_id" },
+  );
+
+  if (error) {
+    throw error;
+  }
+}
+
 exports.handleStripeWebhook = async (req, res) => {
   const signature = req.headers["stripe-signature"];
 
@@ -82,6 +117,7 @@ exports.handleStripeWebhook = async (req, res) => {
       );
       console.log("Subscription status:", subscription.status);
       console.log("Stripe subscription:", subscription.id);
+      await upsertSubscription(subscription);
       break;
     }
 
