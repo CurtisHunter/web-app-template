@@ -9,6 +9,8 @@ function MainPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasPro, setHasPro] = useState(false);
   const [checkoutMessage, setCheckoutMessage] = useState("");
+  const [isStartingCheckout, setIsStartingCheckout] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
 
   const navigate = useNavigate();
 
@@ -27,6 +29,8 @@ function MainPage() {
   }
 
   async function handleUpgrade() {
+    setIsStartingCheckout(true);
+    setCheckoutError("");
     try {
       const {
         data: { session },
@@ -47,12 +51,16 @@ function MainPage() {
 
       if (!response.ok) {
         console.error("Error creating Stripe checkout session");
+        setCheckoutError("Could not start checkout. Please try again.");
         return;
       }
 
       window.location.href = data.url;
     } catch (error) {
       console.error("Error presenting Stripe checkout", error);
+      setCheckoutError("Could not start checkout. Please try again.");
+    } finally {
+      setIsStartingCheckout(false);
     }
   }
 
@@ -156,9 +164,16 @@ function MainPage() {
       <p>Signed in as {userName}</p>
       <p>Plan: {hasPro ? "Pro" : "Free"}</p>
       {!hasPro && (
-        <button type="button" onClick={handleUpgrade}>
-          Upgrade
-        </button>
+        <div>
+          {checkoutError && <p>{checkoutError}</p>}
+          <button
+            type="button"
+            onClick={handleUpgrade}
+            disabled={isStartingCheckout}
+          >
+            {isStartingCheckout ? "Starting checkout..." : "Upgrade"}
+          </button>
+        </div>
       )}
     </main>
   );
