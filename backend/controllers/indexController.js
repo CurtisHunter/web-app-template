@@ -161,3 +161,29 @@ exports.handleStripeWebhook = async (req, res) => {
 
   res.json({ received: true });
 };
+
+exports.getBillingStatus = async (req, res) => {
+  try {
+    const { user, error: authError } = await getAuthenticatedUser(req);
+
+    if (authError || !user) {
+      return res.status(401).json({ error: authError });
+    }
+
+    const { data, error } = await supabase
+      .from("subscriptions")
+      .select("status")
+      .eq("user_id", user.id)
+      .in("status", ["active", "trialing"])
+      .limit(1);
+
+    if (error) {
+      throw error;
+    }
+
+    res.json({ hasPro: data.length > 0 });
+  } catch (error) {
+    console.error("Error loading billing status:", error);
+    res.status(500).json({ error: "Could not load billing status" });
+  }
+};
