@@ -2,10 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { supabase } from "../../lib/supabase";
 import { identifyUser, resetAnalytics, trackEvent } from "../../lib/analytics";
-import {
-  configureRevenueCat,
-  userHasProEntitlement,
-} from "../../lib/revenuecat";
+const apiUrl = import.meta.env.VITE_API_URL;
 
 function MainPage() {
   const [userName, setUserName] = useState("");
@@ -41,13 +38,10 @@ function MainPage() {
         return;
       }
 
-      const response = await fetch(
-        "http://localhost:3000/api/create-checkout-session",
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        },
-      );
+      const response = await fetch(`${apiUrl}/api/create-checkout-session`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
 
       const data = await response.json();
 
@@ -74,13 +68,34 @@ function MainPage() {
         }
 
         identifyUser(claims.sub);
-        configureRevenueCat(claims.sub);
+
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session) {
+          navigate("/users/sign-in");
+          return;
+        }
 
         try {
-          const isProUser = await userHasProEntitlement();
-          setHasPro(isProUser);
+          const response = await fetch(`${apiUrl}/api/billing/status`, {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          });
+
+          const billingStatus = await response.json();
+
+          if (!response.ok) {
+            console.error("Error loading billing status:", billingStatus);
+            setHasPro(false);
+            return;
+          }
+
+          setHasPro(billingStatus.hasPro);
         } catch (error) {
-          console.error("Error checking RevenueCat entitlement:", error);
+          console.error("Error loading billing status:", error);
           setHasPro(false);
         }
 
