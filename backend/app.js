@@ -2,10 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const indexRouter = require("./routes/indexRouter");
-const authRouter = require("./routes/authRouter");
-const session = require("express-session");
-const passport = require("passport");
-require("./config/passport")(passport);
+const indexController = require("./controllers/indexController");
 
 const app = express();
 
@@ -17,21 +14,16 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: true }));
+
+// adding this route before .json in order to use express.raw
+app.post(
+  "/api/stripe/webhook",
+  express.raw({ type: "application/json" }),
+  indexController.handleStripeWebhook,
+);
 app.use(express.json());
 
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-  }),
-);
-
-app.use(passport.initialize());
-app.use(passport.session());
-
 app.use("/", indexRouter);
-app.use("/api/auth", authRouter);
 
 const PORT = process.env.PORT || 3000;
 

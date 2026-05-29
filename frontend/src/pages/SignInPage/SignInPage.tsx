@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { apiFetch } from "../../api/client";
+import { supabase } from "../../lib/supabase";
+import { trackEvent } from "../../lib/analytics";
 
 function SignInPage() {
   const [email, setEmail] = useState("");
@@ -13,24 +14,45 @@ function SignInPage() {
     event.preventDefault();
     setErrorMessage("");
 
-    const response = await apiFetch("/api/auth/sign-in", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
+    trackEvent("auth_sign_in_submitted", { method: "email" });
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      if (data.errors) {
-        setErrorMessage(data.errors[0].msg);
-        return;
-      }
-
-      setErrorMessage(data.message || "Something went wrong");
+    if (error) {
+      setErrorMessage(error.message);
+      trackEvent("auth_sign_in_failed", {
+        method: "email",
+        reason: error.message,
+      });
       return;
     }
 
+    trackEvent("auth_sign_in_succeeded", { method: "email" });
+
     navigate("/");
+  }
+
+  async function handleGoogleSignIn() {
+    trackEvent("auth_google_sign_in_started", {
+      method: "google",
+    });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      trackEvent("auth_google_sign_in_failed", {
+        method: "google",
+        reason: error.message,
+      });
+      setErrorMessage(error.message);
+    }
   }
 
   return (
@@ -60,6 +82,9 @@ function SignInPage() {
         </div>
         <button type="submit">Log In</button>
       </form>
+      <button type="button" onClick={handleGoogleSignIn}>
+        Sign in with Google
+      </button>
       <div>
         <p>
           Need an Account? <Link to="/users/sign-up">Sign up</Link>
