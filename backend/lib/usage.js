@@ -18,4 +18,24 @@ async function recordUsageEvent({
   }
 }
 
-module.exports = { recordUsageEvent };
+// finds how many units has this user used this month for this event type
+async function getMonthlyUsage({ userId, eventType }) {
+  const monthStart = new Date();
+  monthStart.setUTCDate(1);
+  monthStart.setUTCHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from("usage_events")
+    .select("units")
+    .eq("user_id", userId)
+    .eq("event_type", eventType)
+    .gte("created_at", monthStart.toISOString());
+
+  if (error) {
+    throw error;
+  }
+
+  return data.reduce((total, event) => total + event.units, 0);
+}
+
+module.exports = { getMonthlyUsage, recordUsageEvent };
