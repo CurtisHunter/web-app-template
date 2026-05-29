@@ -38,4 +38,21 @@ async function getMonthlyUsage({ userId, eventType }) {
   return data.reduce((total, event) => total + event.units, 0);
 }
 
-module.exports = { getMonthlyUsage, recordUsageEvent };
+async function canUseMonthlyAllowance({
+  userId,
+  eventType,
+  monthlyLimit,
+  requestedUnits = 1,
+}) {
+  const usedUnits = await getMonthlyUsage({ userId, eventType });
+  const remainingUnits = Math.max(monthlyLimit - usedUnits, 0);
+
+  return {
+    allowed: usedUnits + requestedUnits <= monthlyLimit,
+    usedUnits,
+    remainingUnits,
+    monthlyLimit,
+  };
+}
+
+module.exports = { getMonthlyUsage, recordUsageEvent, canUseMonthlyAllowance };
