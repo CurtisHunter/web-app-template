@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { supabase } from "../../lib/supabase";
 import { identifyUser, resetAnalytics, trackEvent } from "../../lib/analytics";
-const apiUrl = import.meta.env.VITE_API_URL;
+import { apiGet, apiPost } from "../../lib/api";
 
 function MainPage() {
   const [userName, setUserName] = useState("");
@@ -42,12 +42,10 @@ function MainPage() {
         return;
       }
 
-      const response = await fetch(`${apiUrl}/api/create-checkout-session`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      const data = await response.json();
+      const { response, data } = await apiPost(
+        "/api/create-checkout-session",
+        session.access_token,
+      );
 
       if (!response.ok) {
         console.error("Error creating Stripe checkout session");
@@ -87,13 +85,10 @@ function MainPage() {
         }
 
         try {
-          const response = await fetch(`${apiUrl}/api/billing/status`, {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          });
-
-          const billingStatus = await response.json();
+          const { response, data: billingStatus } = await apiGet(
+            "/api/billing/status",
+            session.access_token,
+          );
 
           if (!response.ok) {
             console.error("Error loading billing status:", billingStatus);
