@@ -3,6 +3,7 @@
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const supabase = require("../lib/supabase");
+const { canUseMonthlyAllowance, recordUsageEvent } = require("../lib/usage");
 
 exports.healthCheck = async (req, res) => {
   res.json({ status: "ok" });
@@ -16,6 +17,8 @@ exports.createCheckoutSession = async (req, res) => {
         .json({ error: "Stripe checkout is not configured" });
     }
 
+    // Do not trust a userId from the browser. Verify the Supabase token and
+    // derive the user id server-side before creating a paid Checkout Session.
     const { user, error: authError } = await getAuthenticatedUser(req);
 
     if (authError || !user) {
@@ -30,6 +33,8 @@ exports.createCheckoutSession = async (req, res) => {
       metadata: {
         userId,
       },
+      // Stripe subscription webhooks use this metadata to connect the Stripe
+      // subscription back to the Supabase user without trusting the frontend.
       subscription_data: { metadata: { userId } },
       line_items: [
         {
@@ -48,7 +53,8 @@ exports.createCheckoutSession = async (req, res) => {
   }
 };
 
-// update subscription if exists, insert if not. eg new subscription, new trialing, sub cancelled, paused status etc
+// Stripe sends many events for the same subscription over time. Upsert keeps
+// one row per Stripe subscription and updates status/period/price as it changes.
 async function upsertSubscription(subscription) {
   const userId = subscription.metadata?.userId;
 
@@ -83,6 +89,8 @@ async function upsertSubscription(subscription) {
 }
 
 async function getAuthenticatedUser(req) {
+  // All protected backend routes expect the frontend to send the current
+  // Supabase access token as Authorization: Bearer <token>.
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith("Bearer ")
     ? authHeader.slice("Bearer ".length)
@@ -92,6 +100,8 @@ async function getAuthenticatedUser(req) {
     return { user: null, error: "Missing auth token" };
   }
 
+  // getUser(token) asks Supabase Auth to verify the token. This is safer than
+  // decoding claims locally when backend access controls depend on the result.
   const {
     data: { user },
     error,
@@ -110,6 +120,7 @@ exports.handleStripeWebhook = async (req, res) => {
   let event;
 
   try {
+    // Verify the event came from Stripe before trusting any billing data.
     event = stripe.webhooks.constructEvent(
       req.body,
       signature,
@@ -133,6 +144,8 @@ exports.handleStripeWebhook = async (req, res) => {
     case "customer.subscription.created":
     case "customer.subscription.updated":
     case "customer.subscription.deleted": {
+      // Subscription events are the source of truth for whether the user has
+      // Pro access. Invoice events are useful later for payment history.
       const subscription = event.data.object;
 
       console.log(
@@ -170,6 +183,8 @@ exports.getBillingStatus = async (req, res) => {
       return res.status(401).json({ error: authError });
     }
 
+    // The frontend only needs a boolean. Keep Stripe ids, subscription rows,
+    // and other billing details server-owned.
     const { data, error } = await supabase
       .from("subscriptions")
       .select("status")
@@ -185,5 +200,55 @@ exports.getBillingStatus = async (req, res) => {
   } catch (error) {
     console.error("Error loading billing status:", error);
     res.status(500).json({ error: "Could not load billing status" });
+  }
+};
+
+exports.useDemoExternalApi = async (req, res) => {
+  try {
+    const { user, error: authError } = await getAuthenticatedUser(req);
+
+    if (authError || !user) {
+      return res.status(401).json({ error: authError });
+    }
+
+    // Hardcoded for now - this endpoint is just a demo of the pattern:
+    // check allowance -> perform API call -> record usage
+    const eventType = "demo_external_api";
+    const monthlyLimit = 5;
+
+    const allowance = await canUseMonthlyAllowance({
+      userId: user.id,
+      eventType,
+      monthlyLimit,
+    });
+
+    if (!allowance.allowed) {
+      return res.status(429).json({
+        error: "Monthly usage limit reached",
+        ...allowance,
+      });
+    }
+
+    // In a real route, the paid external API call would happen here.
+
+    // Only record usage after the expensive action succeeds.
+    await recordUsageEvent({
+      userId: user.id,
+      eventType,
+      units: 1,
+      metadata: {
+        source: "demo_endpoint",
+      },
+    });
+
+    res.json({
+      ok: true,
+      usedUnits: allowance.usedUnits + 1,
+      remainingUnits: Math.max(allowance.remainingUnits - 1, 0),
+      monthlyLimit: allowance.monthlyLimit,
+    });
+  } catch (error) {
+    console.error("Error using demo external API:", error);
+    res.status(500).json({ error: "Could not use demo external API" });
   }
 };

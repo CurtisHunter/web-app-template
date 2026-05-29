@@ -6,6 +6,8 @@ const indexController = require("./controllers/indexController");
 
 const app = express();
 
+// The frontend runs on a separate Vite origin during local development.
+// Keep the allowed origin in env so production can use the deployed URL.
 app.use(
   cors({
     origin: process.env.FRONTEND_ORIGIN,
@@ -15,7 +17,8 @@ app.use(
 
 app.use(express.urlencoded({ extended: true }));
 
-// adding this route before .json in order to use express.raw
+// Stripe signature verification needs the raw request body. This route must
+// stay before express.json(), otherwise Stripe webhook verification will fail.
 app.post(
   "/api/stripe/webhook",
   express.raw({ type: "application/json" }),

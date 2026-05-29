@@ -2,6 +2,8 @@ require("dotenv").config();
 const pool = require("./pool");
 
 async function initializeDatabase() {
+  // Local helper for the old/simple Postgres setup. In the Supabase setup,
+  // production table/RLS changes are made in the Supabase SQL editor.
   await pool.query(`
     CREATE TABLE IF NOT EXISTS profiles (
       id UUID PRIMARY KEY,

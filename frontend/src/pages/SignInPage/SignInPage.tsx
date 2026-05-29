@@ -16,6 +16,8 @@ function SignInPage() {
 
     trackEvent("auth_sign_in_submitted", { method: "email" });
 
+    // Supabase owns password verification; Express only receives verified
+    // access tokens for protected backend actions.
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -39,6 +41,9 @@ function SignInPage() {
     trackEvent("auth_google_sign_in_started", {
       method: "google",
     });
+
+    // OAuth redirects back to the app origin, where the main page checks auth
+    // and loads profile/billing status.
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

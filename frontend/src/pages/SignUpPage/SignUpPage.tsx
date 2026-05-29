@@ -19,6 +19,8 @@ function SignUpPage() {
       method: "email",
     });
 
+    // Store display name in Supabase user metadata. The database trigger can
+    // copy this into public.profiles without trusting frontend table writes.
     const { error } = await supabase.auth.signUp({
       email,
       password,

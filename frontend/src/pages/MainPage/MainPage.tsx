@@ -32,6 +32,8 @@ function MainPage() {
     setIsStartingCheckout(true);
     setCheckoutError("");
     try {
+      // Checkout is a backend action because Stripe secret keys must never
+      // reach the browser. The access token lets the backend derive user.id.
       const {
         data: { session },
         error,
@@ -65,6 +67,8 @@ function MainPage() {
   useEffect(() => {
     async function checkAuth() {
       try {
+        // getClaims is the fast client-side auth check for routing/UI. Backend
+        // endpoints still verify the access token before doing trusted work.
         const { data, error } = await supabase.auth.getClaims();
         const claims = data?.claims;
 
@@ -75,6 +79,8 @@ function MainPage() {
 
         identifyUser(claims.sub);
 
+        // Backend billing status returns only { hasPro } so sensitive Stripe and
+        // subscription table details stay server-owned.
         const {
           data: { session },
         } = await supabase.auth.getSession();
@@ -123,6 +129,8 @@ function MainPage() {
     }
 
     function checkCheckoutStatus() {
+      // Stripe redirects back with a small status marker. Webhooks still decide
+      // the real subscription state, so this message is only UX feedback.
       const searchParams = new URLSearchParams(window.location.search);
       const checkoutStatus = searchParams.get("checkout");
 
