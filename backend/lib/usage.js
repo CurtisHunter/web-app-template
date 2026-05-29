@@ -1,5 +1,7 @@
 const supabase = require("./supabase");
 
+// Record usage only after the expensive external API call succeeds. That avoids
+// charging/limiting users for failed OpenAI or other provider requests.
 async function recordUsageEvent({
   userId,
   eventType,
@@ -18,7 +20,8 @@ async function recordUsageEvent({
   }
 }
 
-// finds how many units has this user used this month for this event type
+// For now, sum usage in Node for readability. Move this aggregation into SQL or
+// a Supabase RPC later if usage_events grows large.
 async function getMonthlyUsage({ userId, eventType }) {
   const monthStart = new Date();
   monthStart.setUTCDate(1);
@@ -44,6 +47,8 @@ async function canUseMonthlyAllowance({
   monthlyLimit,
   requestedUnits = 1,
 }) {
+  // This is the core future pattern for paid APIs:
+  // check allowance -> call external provider -> record usage.
   const usedUnits = await getMonthlyUsage({ userId, eventType });
   const remainingUnits = Math.max(monthlyLimit - usedUnits, 0);
 
