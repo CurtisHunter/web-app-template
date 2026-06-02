@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const indexRouter = require("./routes/indexRouter");
 const indexController = require("./controllers/indexController");
+const apiRateLimiter = require("./middleware/rateLimit");
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.post(
 );
 app.use(express.json());
 
+app.use("/api", apiRateLimiter);
 app.use("/", indexRouter);
 
 const PORT = process.env.PORT || 3000;
