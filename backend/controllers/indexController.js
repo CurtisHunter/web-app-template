@@ -17,15 +17,7 @@ exports.createCheckoutSession = async (req, res) => {
         .json({ error: "Stripe checkout is not configured" });
     }
 
-    // Do not trust a userId from the browser. Verify the Supabase token and
-    // derive the user id server-side before creating a paid Checkout Session.
-    const { user, error: authError } = await getAuthenticatedUser(req);
-
-    if (authError || !user) {
-      return res.status(401).json({ error: authError });
-    }
-
-    const userId = user.id;
+    const userId = req.user.id;
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -86,32 +78,6 @@ async function upsertSubscription(subscription) {
   if (error) {
     throw error;
   }
-}
-
-async function getAuthenticatedUser(req) {
-  // All protected backend routes expect the frontend to send the current
-  // Supabase access token as Authorization: Bearer <token>.
-  const authHeader = req.headers.authorization;
-  const token = authHeader?.startsWith("Bearer ")
-    ? authHeader.slice("Bearer ".length)
-    : null;
-
-  if (!token) {
-    return { user: null, error: "Missing auth token" };
-  }
-
-  // getUser(token) asks Supabase Auth to verify the token. This is safer than
-  // decoding claims locally when backend access controls depend on the result.
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser(token);
-
-  if (error || !user) {
-    return { user: null, error: "Invalid auth token" };
-  }
-
-  return { user, error: null };
 }
 
 exports.handleStripeWebhook = async (req, res) => {
@@ -177,11 +143,7 @@ exports.handleStripeWebhook = async (req, res) => {
 
 exports.getBillingStatus = async (req, res) => {
   try {
-    const { user, error: authError } = await getAuthenticatedUser(req);
-
-    if (authError || !user) {
-      return res.status(401).json({ error: authError });
-    }
+    const user = req.user;
 
     // The frontend only needs a boolean. Keep Stripe ids, subscription rows,
     // and other billing details server-owned.
@@ -205,11 +167,7 @@ exports.getBillingStatus = async (req, res) => {
 
 exports.useDemoExternalApi = async (req, res) => {
   try {
-    const { user, error: authError } = await getAuthenticatedUser(req);
-
-    if (authError || !user) {
-      return res.status(401).json({ error: authError });
-    }
+    const user = req.user;
 
     // Hardcoded for now - this endpoint is just a demo of the pattern:
     // check allowance -> perform API call -> record usage
