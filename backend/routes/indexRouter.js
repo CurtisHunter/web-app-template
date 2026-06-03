@@ -6,6 +6,8 @@ const {
   useDemoExternalApi,
 } = require("../controllers/indexController");
 const requireAuth = require("../middleware/requireAuth");
+const { body } = require("express-validator");
+const validateRequest = require("../middleware/validateRequest");
 
 const indexRouter = Router();
 
@@ -19,6 +21,17 @@ indexRouter.post(
   createCheckoutSession,
 );
 indexRouter.get("/api/billing/status", requireAuth, getBillingStatus);
-indexRouter.post("/api/demo/usage", requireAuth, useDemoExternalApi);
+indexRouter.post(
+  "/api/demo/usage",
+  requireAuth,
+  body("prompt")
+    .trim()
+    .notEmpty()
+    .withMessage("Prompt is required")
+    .isLength({ max: 1000 })
+    .withMessage("Prompt must be 1000 characters or less"),
+  validateRequest,
+  useDemoExternalApi,
+);
 
 module.exports = indexRouter;

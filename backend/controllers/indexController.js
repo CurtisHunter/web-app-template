@@ -173,11 +173,14 @@ exports.useDemoExternalApi = async (req, res) => {
     // check allowance -> perform API call -> record usage
     const eventType = "demo_external_api";
     const monthlyLimit = 5;
+    const prompt = req.body.prompt;
+    const requestedUnits = 1;
 
     const allowance = await canUseMonthlyAllowance({
       userId: user.id,
       eventType,
       monthlyLimit,
+      requestedUnits,
     });
 
     if (!allowance.allowed) {
@@ -193,16 +196,17 @@ exports.useDemoExternalApi = async (req, res) => {
     await recordUsageEvent({
       userId: user.id,
       eventType,
-      units: 1,
+      units: requestedUnits,
       metadata: {
         source: "demo_endpoint",
+        promptLength: prompt.length,
       },
     });
 
     res.json({
       ok: true,
-      usedUnits: allowance.usedUnits + 1,
-      remainingUnits: Math.max(allowance.remainingUnits - 1, 0),
+      usedUnits: allowance.usedUnits + requestedUnits,
+      remainingUnits: Math.max(allowance.remainingUnits - requestedUnits, 0),
       monthlyLimit: allowance.monthlyLimit,
     });
   } catch (error) {
