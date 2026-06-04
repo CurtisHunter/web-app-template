@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "dev": "node --watch app.js",
+    "dev": "tsx watch app.js",
+    "typecheck": "tsc --noEmit",
     "db:init": "node db/init.js"
   },
   "dependencies": {
@@ -12,5 +13,12 @@
     "express-validator": "^7.3.2",
     "pg": "^8.20.0",
     "stripe": "^22.1.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
   }
 }
