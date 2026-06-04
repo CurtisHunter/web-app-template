@@ -1,14 +1,10 @@
-import type { NextFunction, Request, Response } from "express";
-import type { User } from "@supabase/supabase-js";
+import type { NextFunction, Response } from "express";
+import type { MaybeAuthenticatedRequest } from "../types/express";
 
 const supabase = require("../lib/supabase");
 
-type AuthenticatedRequest = Request & {
-  user?: User;
-};
-
 async function requireAuth(
-  req: AuthenticatedRequest,
+  req: MaybeAuthenticatedRequest,
   res: Response,
   next: NextFunction,
 ) {
