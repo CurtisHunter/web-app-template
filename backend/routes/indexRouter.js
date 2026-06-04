@@ -4,6 +4,7 @@ const {
   createCheckoutSession,
   getBillingStatus,
   useDemoExternalApi,
+  createCustomerPortalSession,
 } = require("../controllers/indexController");
 const requireAuth = require("../middleware/requireAuth");
 const { body } = require("express-validator");
@@ -32,6 +33,12 @@ indexRouter.post(
     .withMessage("Prompt must be 1000 characters or less"),
   validateRequest,
   useDemoExternalApi,
+);
+
+indexRouter.post(
+  "/api/create-customer-portal-session",
+  requireAuth,
+  createCustomerPortalSession,
 );
 
 module.exports = indexRouter;

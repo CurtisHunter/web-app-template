@@ -214,3 +214,36 @@ exports.useDemoExternalApi = async (req, res) => {
     res.status(500).json({ error: "Could not use demo external API" });
   }
 };
+
+exports.createCustomerPortalSession = async (req, res) => {
+  try {
+    const user = req.user;
+
+    const { data, error } = await supabase
+      .from("subscriptions")
+      .select("stripe_customer_id")
+      .eq("user_id", user.id)
+      .in("status", ["active", "trialing", "past_due"])
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data?.stripe_customer_id) {
+      return res.status(404).json({ error: "No Stripe customer found" });
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: data.stripe_customer_id,
+      return_url: process.env.CLIENT_URL,
+    });
+
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error("Error creating Stripe customer portal session:", error);
+    res.status(500).json({ error: "Could not create customer portal session" });
+  }
+};
