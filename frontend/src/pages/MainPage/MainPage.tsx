@@ -11,7 +11,7 @@ function MainPage() {
   const [checkoutMessage, setCheckoutMessage] = useState("");
   const [isStartingCheckout, setIsStartingCheckout] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
-
+  const [isOpeningBillingPortal, setIsOpeningBillingPortal] = useState(false);
   const navigate = useNavigate();
 
   async function handleSignOut() {
@@ -61,6 +61,41 @@ function MainPage() {
       setCheckoutError("Could not start checkout. Please try again.");
     } finally {
       setIsStartingCheckout(false);
+    }
+  }
+
+  async function handleManageBilling() {
+    setIsOpeningBillingPortal(true);
+    setCheckoutError("");
+
+    try {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      if (error || !session) {
+        navigate("/users/sign-in");
+        return;
+      }
+
+      const { response, data } = await apiPost(
+        "/api/create-customer-portal-session",
+        session.access_token,
+      );
+
+      if (!response.ok) {
+        console.error("Error creating Stripe customer portal session:", data);
+        setCheckoutError("Could not open billing portal. Please try again.");
+        return;
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      console.error("Error opening billing portal: ", error);
+      setCheckoutError("Could not open billing portal. Please try again.");
+    } finally {
+      setIsOpeningBillingPortal(false);
     }
   }
 
@@ -175,6 +210,18 @@ function MainPage() {
             disabled={isStartingCheckout}
           >
             {isStartingCheckout ? "Starting checkout..." : "Upgrade"}
+          </button>
+        </div>
+      )}
+      {hasPro && (
+        <div>
+          {checkoutError && <p>{checkoutError}</p>}
+          <button
+            type="button"
+            onClick={handleManageBilling}
+            disabled={isOpeningBillingPortal}
+          >
+            {isOpeningBillingPortal ? "Opening billing..." : "Manage billing"}
           </button>
         </div>
       )}
