@@ -1,6 +1,8 @@
+import type { NextFunction, Request, Response } from "express";
+
 const { validationResult } = require("express-validator");
 
-function validateRequest(req, res, next) {
+function validateRequest(req: Request, res: Response, next: NextFunction) {
   const errors = validationResult(req);
 
   if (errors.isEmpty()) {
