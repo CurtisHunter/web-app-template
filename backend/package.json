@@ -1,8 +1,7 @@
 {
   "scripts": {
     "dev": "tsx watch app.js",
-    "typecheck": "tsc --noEmit",
-    "db:init": "node db/init.js"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
@@ -11,7 +10,6 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
     "express-validator": "^7.3.2",
-    "pg": "^8.20.0",
     "stripe": "^22.1.1"
   },
   "devDependencies": {

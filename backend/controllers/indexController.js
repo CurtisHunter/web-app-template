@@ -1,4 +1,3 @@
-//const db = require("../db/queries");
 //const { body, validationResult, matchedData } = require("express-validator");
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
