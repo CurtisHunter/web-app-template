@@ -30,17 +30,10 @@ app.use(express.json());
 app.use("/api", apiRateLimiter);
 app.use("/", indexRouter);
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
-async function startServer() {
-  app.listen(PORT, (error) => {
-    if (error) {
-      throw error;
-    }
-  });
+function startServer() {
+  app.listen(PORT);
 }
 
-startServer().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+startServer();

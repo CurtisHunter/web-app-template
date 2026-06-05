@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "dev": "tsx watch app.js",
+    "dev": "tsx watch app.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
