@@ -106,9 +106,10 @@ exports.handleStripeWebhook = async (req: Request, res: Response) => {
     case "checkout.session.completed": {
       const session = event.data.object;
 
-      console.log("Checkout completed for user:", session.client_reference_id);
-      console.log("Stripe customer:", session.customer);
-      console.log("Stripe subscription:", session.subscription);
+      console.log("Checkout completed:", {
+        hasUserReference: Boolean(session.client_reference_id),
+        hasSubscription: Boolean(session.subscription),
+      });
       break;
     }
 
@@ -119,23 +120,18 @@ exports.handleStripeWebhook = async (req: Request, res: Response) => {
       // Pro access. Invoice events are useful later for payment history.
       const subscription = event.data.object;
 
-      console.log(
-        "Subscription event for user:",
-        subscription.metadata?.userId,
-      );
-      console.log("Subscription status:", subscription.status);
-      console.log("Stripe subscription:", subscription.id);
+      console.log("Subscription event:", {
+        type: event.type,
+        status: subscription.status,
+        hasUserMetadata: Boolean(subscription.metadata?.userId),
+      });
       await upsertSubscription(subscription);
       break;
     }
 
     case "invoice.paid":
     case "invoice.payment_failed": {
-      const invoice = event.data.object;
-
       console.log("Invoice event:", event.type);
-      console.log("Stripe customer:", invoice.customer);
-      console.log("Stripe subscription:", invoice.subscription);
       break;
     }
 
