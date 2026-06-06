@@ -1,15 +1,20 @@
-//const db = require("../db/queries");
 //const { body, validationResult, matchedData } = require("express-validator");
+
+import type { Request, Response } from "express";
+import type { AuthenticatedRequest } from "../types/express";
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const supabase = require("../lib/supabase");
 const { canUseMonthlyAllowance, recordUsageEvent } = require("../lib/usage");
 
-exports.healthCheck = async (req, res) => {
+exports.healthCheck = async (_req: Request, res: Response) => {
   res.json({ status: "ok" });
 };
 
-exports.createCheckoutSession = async (req, res) => {
+exports.createCheckoutSession = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
   try {
     if (!process.env.STRIPE_PRICE_ID || !process.env.CLIENT_URL) {
       return res
@@ -47,7 +52,7 @@ exports.createCheckoutSession = async (req, res) => {
 
 // Stripe sends many events for the same subscription over time. Upsert keeps
 // one row per Stripe subscription and updates status/period/price as it changes.
-async function upsertSubscription(subscription) {
+async function upsertSubscription(subscription: any) {
   const userId = subscription.metadata?.userId;
 
   if (!userId) {
@@ -80,10 +85,10 @@ async function upsertSubscription(subscription) {
   }
 }
 
-exports.handleStripeWebhook = async (req, res) => {
+exports.handleStripeWebhook = async (req: Request, res: Response) => {
   const signature = req.headers["stripe-signature"];
 
-  let event;
+  let event: any;
 
   try {
     // Verify the event came from Stripe before trusting any billing data.
@@ -92,7 +97,7 @@ exports.handleStripeWebhook = async (req, res) => {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET,
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Stripe webhook signature verification failed", error);
     return res.status(400).send(`Webhook Error ${error.message}`);
   }
@@ -141,7 +146,10 @@ exports.handleStripeWebhook = async (req, res) => {
   res.json({ received: true });
 };
 
-exports.getBillingStatus = async (req, res) => {
+exports.getBillingStatus = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
   try {
     const user = req.user;
 
@@ -165,7 +173,10 @@ exports.getBillingStatus = async (req, res) => {
   }
 };
 
-exports.useDemoExternalApi = async (req, res) => {
+exports.useDemoExternalApi = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
   try {
     const user = req.user;
 
@@ -215,7 +226,10 @@ exports.useDemoExternalApi = async (req, res) => {
   }
 };
 
-exports.createCustomerPortalSession = async (req, res) => {
+exports.createCustomerPortalSession = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
   try {
     const user = req.user;
 

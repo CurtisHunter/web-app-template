@@ -1,6 +1,13 @@
+import type { NextFunction, Response } from "express";
+import type { MaybeAuthenticatedRequest } from "../types/express";
+
 const supabase = require("../lib/supabase");
 
-async function requireAuth(req, res, next) {
+async function requireAuth(
+  req: MaybeAuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+) {
   // All protected backend routes expect the frontend to send the current
   // Supabase access token as Authorization: Bearer <token>.
   const authHeader = req.headers.authorization;
