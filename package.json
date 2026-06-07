@@ -1,5 +1,5 @@
 {
-  "name": "french-ai-app",
+  "name": "web-app-template",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
